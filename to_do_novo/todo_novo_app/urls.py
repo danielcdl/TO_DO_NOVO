@@ -1,7 +1,7 @@
 from django.urls import path
 from .models import Tarefa, Grupos, Sub_Grupos
-from .views import Logar, Registrar, ListaTarefa, TodasTarefas, VisualizaGrupo, VisualizaSubGrupo, Criar, CriarGrupo, CriarSubGrupo, Atualizar, \
-    AtualizarGrupo, AtualizarSubGrupo, Apagar, ApagarGrupo, ApagarSubGrupo, MostraSubGrupo
+from .views import Logar, Registrar, ListaTarefa, TodasTarefas, VisualizaGrupo, VisualizaSubGrupo, Criar, CriarGrupo, Atualizar, \
+    AtualizarGrupo, AtualizarSubGrupo, Apagar, ApagarGrupo, ApagarSubGrupo, MostraSubGrupo, pega_get
 from django.contrib.auth.views import LogoutView
 from django.views.generic import TemplateView
 
@@ -15,7 +15,7 @@ urlpatterns = [
     path('subgrupos/<int:pk>', VisualizaSubGrupo.as_view(), name='subgrupos'),
     path('criar/', Criar.as_view(), name='criar'),
     path('criar_grupo/', CriarGrupo.as_view(), name='criar_grupo'),
-    path('criar_subgrupo/', CriarSubGrupo.as_view(), name='criar_subgrupo'),
+    path('criar_subgrupo/<int:pk>', pega_get, name='criar_subgrupo'),
     path('atualizar/<int:pk>/', Atualizar.as_view(), name='atualizar'),
     path('atualizar_grupos/<int:pk>/', AtualizarGrupo.as_view(), name='atualizar_grupos'),
     path('atualizar_subgrupos/<int:pk>/', AtualizarSubGrupo.as_view(), name='atualizar_subgrupos'),

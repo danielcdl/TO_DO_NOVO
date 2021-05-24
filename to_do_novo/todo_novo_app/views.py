@@ -1,5 +1,6 @@
 from .models import Tarefa, Grupos, Sub_Grupos
-from django.shortcuts import render, redirect
+from .forms import Sub_GruposForm
+from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic import View
 from django.views.generic.edit import CreateView, UpdateView, DeleteView, FormView
@@ -81,10 +82,8 @@ class VisualizaSubGrupo(LoginRequiredMixin, ListView):
 
     def get(self, request, pk):
         grupo_especifico = Grupos.objects.get(id=pk)
-        print(grupo_especifico)
         join_subgrupo = grupo_especifico.join_grupos.all()
-        print(join_subgrupo)
-        context = {'join_subgrupo': join_subgrupo}
+        context = {'join_subgrupo': join_subgrupo, 'pk': pk}
 
         return render(request, "login/subgrupos.html", context)
 
@@ -96,15 +95,52 @@ class MostraSubGrupo(LoginRequiredMixin, View):
         context = {'join_subgrupo': join_subgrupo}
         return render(request, "login/mostra_subgrupo.html", context)
 
-class CriarSubGrupo(LoginRequiredMixin, CreateView):
-    model = Sub_Grupos
-    context_object_name = 'criar_subgrupo'
-    fields = '__all__'
-    template_name = 'login/formulario_subgrupos.html'
+#class CriarSubGrupo(LoginRequiredMixin, CreateView):
+#    model = Sub_Grupos
+#    context_object_name = 'criar_subgrupo'
+#   fields = '__all__'
+#   template_name = 'login/formulario_subgrupos.html'
 
-    def form_valid(self, form):
-        form.instance.user = self.request.user
-        return super(CriarSubGrupo, self).form_valid(form)
+#    def get(self, request, pk):
+#        context = {'pk': pk}
+
+#        return render(request, "login/formulario_subgrupos.html", context)
+
+#    def form_valid(self, form):
+#        form.instance.user = self.request.user
+#        return super(CriarSubGrupo, self).form_valid(form)
+
+
+
+def pega_get(request, pk):
+
+    form = Sub_GruposForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+        return redirect(f'/subgrupos/{pk}')
+
+    return render(request, 'login/formulario_subgrupos.html', {'form': form, 'pk': pk})
+
+
+#def pega_get(request, pk):
+
+#    if request.method == 'POST':
+#        item = get_object_or_404(Grupos, id=pk)
+#        form = Sub_GruposForm(request.POST, instance=item)
+#        if form.is_valid():
+#            form.save()
+#            return redirect(f'/subgrupos/{pk}')
+#    else:
+#        item = Sub_Grupos.objects.filter(id=pk).values().last()
+#        form = Sub_GruposForm(initial=item)
+
+
+ #   return render(request, 'login/formulario_subgrupos.html', {'form': form, 'item': item, 'pk': pk})
+
+
+
+
 
 class AtualizarSubGrupo(LoginRequiredMixin, UpdateView):
     model = Sub_Grupos

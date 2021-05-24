@@ -21,10 +21,11 @@
     <input type="text" name="search-area" value="{{ search_input }}">
     <input type="submit" value="Search">
 </form>
-    <a id="add-link" href="{% url 'criar_subgrupo' %}">&#x2b;</a>
+    <a id="add-link" href="{% url 'criar_subgrupo' pk %}">&#x2b;</a>
 </div>
 
 <div id="tasklist" class="task-items-wrapper">
+
     {% for subgrupo in join_subgrupo %}
     <div class="task-wrapper" data-position="{{ subgrupo.pk }}">
         <div class="task-title">
