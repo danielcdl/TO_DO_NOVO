@@ -1,7 +1,7 @@
 {% extends 'login/main.html' %}
 {% block content %}
 
-<a href="{% url 'grupos' %} ">Retornar</a>
+<a href="{% url 'subgrupos' id_grupo %} ">Retornar</a>
 
 <form method='POST'>
   {% csrf_token %}

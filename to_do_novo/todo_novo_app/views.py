@@ -1,5 +1,5 @@
 from .models import Tarefa, Grupos, Sub_Grupos
-from .forms import Sub_GruposForm
+from .forms import Sub_GruposForm, TarefasForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic import View
@@ -92,66 +92,87 @@ class MostraSubGrupo(LoginRequiredMixin, View):
     def get(self, request, pk):
         subgrupo_especifico = Sub_Grupos.objects.get(id=pk)
         join_subgrupo = subgrupo_especifico.tarefa_subgrupos.all()
-        context = {'join_subgrupo': join_subgrupo}
+        context = {'join_subgrupo': join_subgrupo, 'pk': pk}
+
         return render(request, "login/mostra_subgrupo.html", context)
-
-#class CriarSubGrupo(LoginRequiredMixin, CreateView):
-#    model = Sub_Grupos
-#    context_object_name = 'criar_subgrupo'
-#   fields = '__all__'
-#   template_name = 'login/formulario_subgrupos.html'
-
-#    def get(self, request, pk):
-#        context = {'pk': pk}
-
-#        return render(request, "login/formulario_subgrupos.html", context)
-
-#    def form_valid(self, form):
-#        form.instance.user = self.request.user
-#        return super(CriarSubGrupo, self).form_valid(form)
-
 
 
 def pega_get(request, pk):
 
     form = Sub_GruposForm(request.POST or None)
+    print(pk)
+    item = Grupos.objects.get(id=pk)
+    print(item)
+    id_grupo = item.id
+    print(id_grupo)
+
 
     if form.is_valid():
         form.save()
-        return redirect(f'/subgrupos/{pk}')
+        return redirect(f'/subgrupos/{id_grupo}')
 
-    return render(request, 'login/formulario_subgrupos.html', {'form': form, 'pk': pk})
-
-
-#def pega_get(request, pk):
-
-#    if request.method == 'POST':
-#        item = get_object_or_404(Grupos, id=pk)
-#        form = Sub_GruposForm(request.POST, instance=item)
-#        if form.is_valid():
-#            form.save()
-#            return redirect(f'/subgrupos/{pk}')
-#    else:
-#        item = Sub_Grupos.objects.filter(id=pk).values().last()
-#        form = Sub_GruposForm(initial=item)
-
-
- #   return render(request, 'login/formulario_subgrupos.html', {'form': form, 'item': item, 'pk': pk})
+    return render(request, 'login/formulario_subgrupos.html', {'form': form, 'pk': pk, 'id_grupo': id_grupo})
 
 
 
+def exclui_subgrupo(request, pk):
+
+    item = Sub_Grupos.objects.get(id=pk)
+    id_grupo = item.grupo_sub_id
+
+    if request.method == 'POST':
+        item.delete()
+        return redirect(f'/subgrupos/{id_grupo}')
+
+    return render(request, 'login/apagar_subgrupo.html', {'pk': pk, 'id_grupo': id_grupo})
+
+def pega_get_tarefa(request, pk):
+
+    form = TarefasForm(request.POST or None)
+
+    if form.is_valid():
+        form.save()
+        return redirect(f'/mostra_subgrupo/{pk}')
+
+    return render(request, 'login/formulario.html', {'form': form, 'pk': pk})
+
+
+def edita_subgrupo(request, pk):
+
+    item_id = Sub_Grupos.objects.get(id=pk)
+    id_grupo = item_id.grupo_sub_id
+
+    if request.method == 'POST':
+        item = get_object_or_404(Sub_Grupos, id=pk)
+
+        form = Sub_GruposForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect(f'/subgrupos/{id_grupo}')
+    else:
+        item = Sub_Grupos.objects.filter(id=pk).values().last()
+        form = Sub_GruposForm(initial=item)
+
+    return render(request, 'login/formulario_subgrupos.html', {'pk': pk, 'form': form, 'id_grupo': id_grupo})
+
+
+
+def atualiza_subgrupo(request, pk):
+
+    item = Sub_Grupos.objects.get(id=pk)
+    id_grupo = item.grupo_sub_id
+
+    if request.method == 'POST':
+        item.delete()
+        return redirect(f'/subgrupos/{id_grupo}')
+
+    return render(request, 'login/apagar_subgrupo.html', {'pk': pk, 'id_grupo': id_grupo})
 
 
 class AtualizarSubGrupo(LoginRequiredMixin, UpdateView):
     model = Sub_Grupos
     fields = '__all__'
     template_name = 'login/formulario_subgrupos.html'
-
-class ApagarSubGrupo(LoginRequiredMixin, DeleteView):
-    model = Sub_Grupos
-    fields = '__all__'
-    success_url = reverse_lazy('subgrupos')
-    template_name = 'login/apagar_subgrupo.html'
 
 
 
