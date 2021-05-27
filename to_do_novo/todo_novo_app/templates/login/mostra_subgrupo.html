@@ -6,7 +6,7 @@
     <div>
         <h1>Hello, {{ request.user.first_name }}</h1>
         <a href="{% url 'grupos' %} ">Home</a>
-        <a href="{% url 'subgrupos' pk %} ">Retornar</a>
+        <a href="{% url 'subgrupos' id_grupo %} ">Retornar</a>
     </div>
 
 {% if request.user.is_authenticated %}
@@ -27,21 +27,20 @@
 </div>
 
 <div id="tasklist" class="task-items-wrapper">
-    {% for subgrupo in join_subgrupo %}
+    {% for tarefa in join_subgrupo %}
 
-    <div class="task-wrapper" data-position="{{grupo.pk}}">
+    <div class="task-wrapper" data-position="{{ tarefa.pk }}">
         <div class="task-title">
-            {% if subgrupo.complete %}
+            {% if tarefa.complete %}
             <div class="task-complete-icon"></div>
-            <a href="{% url 'atualizar' subgrupo.id %}">{{ subgrupo }}</a>
+            <a href="{% url 'atualizar' tarefa.id %}">{{ tarefa }}</a>
             {% else %}
             <div class="task-incomplete-icon"></div>
-            <a href="{% url 'atualizar' subgrupo.id %}">{{ subgrupo }}</a>
+            <a href="{% url 'atualizar' tarefa.id %}">{{ tarefa }}</a>
             {% endif %}
         </div>
         <div class="task-controls">
-            <a class="delete-link" href="{% url 'apagar' subgrupo.id %}">&#215;</a>
-            <span class="handle">&nbsp;&#10247;</span>
+            <a class="delete-link" href="{% url 'apagar' tarefa.id %}">&#215;</a>
         </div>
     </div>
 
