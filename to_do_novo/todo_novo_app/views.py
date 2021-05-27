@@ -10,7 +10,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
 
-#Bloco Autenticação
+
+# Bloco Autenticação
 class Logar(LoginView):
     template_name = 'login/login.html'
     fields = '__all__'
@@ -18,6 +19,7 @@ class Logar(LoginView):
 
     def get_success_url(self):
         return reverse_lazy('grupos')
+
 
 class Registrar(FormView):
     template_name = 'login/registrar.html'
@@ -37,13 +39,14 @@ class Registrar(FormView):
             return redirect('tarefas')
         return super(Registrar, self).get(*args, **kwargs)
 
+
 class Sair(LogoutView):
 
     def get_success_url(self):
         return reverse_lazy('login')
 
 
-#Bloco Tratamento Grupos
+# Bloco Tratamento Grupos
 class VisualizaGrupo(LoginRequiredMixin, View):
 
     def get(self, request):
@@ -57,6 +60,7 @@ class VisualizaGrupo(LoginRequiredMixin, View):
 
         return render(request, "login/grupos.html", context)
 
+
 class CriarGrupo(LoginRequiredMixin, CreateView):
     model = Grupos
     context_object_name = 'criar_grupo'
@@ -68,11 +72,13 @@ class CriarGrupo(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super(CriarGrupo, self).form_valid(form)
 
+
 class AtualizarGrupo(LoginRequiredMixin, UpdateView):
     model = Grupos
     fields = '__all__'
     success_url = reverse_lazy('grupos')
     template_name = 'login/formulario_grupos.html'
+
 
 class ApagarGrupo(LoginRequiredMixin, DeleteView):
     model = Grupos
@@ -81,29 +87,41 @@ class ApagarGrupo(LoginRequiredMixin, DeleteView):
     template_name = 'login/apagar_grupo.html'
 
 
-
-#Bloco Tratamento Sub_Grupo
+# Bloco Tratamento Sub_Grupo
 class VisualizaSubGrupo(LoginRequiredMixin, ListView):
 
     def get(self, request, pk):
+        busca = request.GET.get('search-area', '')
         grupo_especifico = Grupos.objects.get(id=pk)
         join_subgrupo = grupo_especifico.join_grupos.all()
-        context = {'join_subgrupo': join_subgrupo, 'pk': pk}
+
+        if busca:
+            join_subgrupo = join_subgrupo.filter(nome_subgrupo__icontains=busca)
+
+        context = {'join_subgrupo': join_subgrupo, 'pk': pk, 'grupo_especifico': grupo_especifico,
+                   'search_input': busca}
 
         return render(request, "login/subgrupos.html", context)
+
 
 class MostraSubGrupo(LoginRequiredMixin, View):
 
     def get(self, request, pk):
         subgrupo_especifico = Sub_Grupos.objects.get(id=pk)
         join_subgrupo = subgrupo_especifico.tarefa_subgrupos.all()
-        context = {'join_subgrupo': join_subgrupo, 'pk': pk}
+        id_grupo = subgrupo_especifico.grupo_sub_id
+
+        busca = request.GET.get('search-area', '')
+
+        if busca:
+            join_subgrupo = join_subgrupo.filter(title__icontains=busca)
+
+        context = {'join_subgrupo': join_subgrupo, 'pk': pk, 'search_input': busca, 'id_grupo': id_grupo}
 
         return render(request, "login/mostra_subgrupo.html", context)
 
 
 def pega_get(request, pk):
-
     form = Sub_GruposForm(request.POST or None)
     item = Grupos.objects.get(id=pk)
     id_grupo = item.id
@@ -116,7 +134,6 @@ def pega_get(request, pk):
 
 
 def exclui_subgrupo(request, pk):
-
     item = Sub_Grupos.objects.get(id=pk)
     id_grupo = item.grupo_sub_id
 
@@ -126,28 +143,30 @@ def exclui_subgrupo(request, pk):
 
     return render(request, 'login/apagar_subgrupo.html', {'pk': pk, 'id_grupo': id_grupo})
 
-def pega_get_tarefa(request, pk):
 
-    form = TarefasForm(request.POST or None)
+def pega_get_tarefa(request, pk):
     item = Sub_Grupos.objects.get(id=pk)
+    join_subgrupo = item.tarefa_subgrupos.all()
     id_subgrupo = item.id
+    form = TarefasForm(request.POST or None)
 
     if form.is_valid():
         form.save()
         return redirect(f'/mostra_subgrupo/{id_subgrupo}')
 
-    return render(request, 'login/formulario.html', {'form': form, 'pk': pk, 'id_subgrupo': id_subgrupo})
+    context = {'join_subgrupo': join_subgrupo, 'pk': pk, 'item': item, 'id_subgrupo': id_subgrupo, 'form': form}
+
+    return render(request, 'login/formulario.html', context)
 
 
 def edita_subgrupo(request, pk):
-
     item_id = Sub_Grupos.objects.get(id=pk)
     id_grupo = item_id.grupo_sub_id
 
     if request.method == 'POST':
         item = get_object_or_404(Sub_Grupos, id=pk)
-
         form = Sub_GruposForm(request.POST, instance=item)
+
         if form.is_valid():
             form.save()
             return redirect(f'/subgrupos/{id_grupo}')
@@ -158,9 +177,7 @@ def edita_subgrupo(request, pk):
     return render(request, 'login/formulario_subgrupos.html', {'pk': pk, 'form': form, 'id_grupo': id_grupo})
 
 
-
 def atualiza_subgrupo(request, pk):
-
     item = Sub_Grupos.objects.get(id=pk)
     id_grupo = item.grupo_sub_id
 
@@ -177,28 +194,7 @@ class AtualizarSubGrupo(LoginRequiredMixin, UpdateView):
     template_name = 'login/formulario_subgrupos.html'
 
 
-
-#Bloco Tratamento Tarefas
-class ListaTarefa(LoginRequiredMixin, ListView):
-    model = Tarefa
-    fields = '__all__'
-    context_object_name = 'tarefas'
-
-    def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        data['tarefas'] = data['tarefas'].filter(user=self.request.user)
-        data['count'] = data['tarefas'].filter(complete=False).count()
-
-        search_input = self.request.GET.get('search-area') or ''
-        if search_input:
-            data['tarefas'] = data['tarefas'].filter(
-                title__startswith=search_input)
-        data['search_input'] = search_input
-        return data
-
-class TodasTarefas(LoginRequiredMixin, ListView):
-    model = Tarefa
-    context_object_name = 'completo'
+# Bloco Tratamento Tarefas
 
 class Criar(LoginRequiredMixin, CreateView):
     model = Tarefa
@@ -210,11 +206,13 @@ class Criar(LoginRequiredMixin, CreateView):
         form.instance.user = self.request.user
         return super(Criar, self).form_valid(form)
 
+
 class Atualizar(LoginRequiredMixin, UpdateView):
     model = Tarefa
     fields = '__all__'
     success_url = reverse_lazy('tarefas')
     template_name = 'login/formulario.html'
+
 
 class Apagar(DeleteView, LoginRequiredMixin):
     model = Tarefa
@@ -222,32 +220,30 @@ class Apagar(DeleteView, LoginRequiredMixin):
     success_url = reverse_lazy('tarefas')
     template_name = 'login/confirmar.html'
 
-def exclui_tarefa(request, pk):
 
+def exclui_tarefa(request, pk):
     item_tarefa = Tarefa.objects.get(id=pk)
-    print(item_tarefa)
     id_subgrupo = item_tarefa.subgrupo_tar_id.id
-    print(id_subgrupo)
     id_usuario = item_tarefa.user_id
 
     if request.method == 'POST':
         item_tarefa.delete()
         return redirect(f'/mostra_subgrupo/{id_subgrupo}')
 
-    return render(request, 'login/confirmar.html', {'pk': pk, 'id_usuario': id_usuario, 'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})
+    return render(request, 'login/confirmar.html',
+                  {'pk': pk, 'id_usuario': id_usuario, 'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})
+
 
 def edita_tarefa(request, pk):
-
     item_tarefa = Tarefa.objects.get(id=pk)
     id_subgrupo = item_tarefa.subgrupo_tar_id.id
     id_usuario = item_tarefa.user_id
     id_grupo = item_tarefa.grupo.id
-    print(id_grupo)
 
     if request.method == 'POST':
-        item = get_object_or_404(Sub_Grupos, id=pk)
-
+        item = get_object_or_404(Tarefa, id=pk)
         form = TarefasForm(request.POST, instance=item)
+
         if form.is_valid():
             form.save()
             return redirect(f'/mostra_subgrupo/{id_subgrupo}')
@@ -255,4 +251,6 @@ def edita_tarefa(request, pk):
         item = Tarefa.objects.filter(id=pk).values().last()
         form = TarefasForm(initial=item)
 
-    return render(request, 'login/formulario.html', {'pk': pk, 'id_grupo': id_grupo, 'item': item, 'form': form, 'id_usuario': id_usuario, 'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})
+    return render(request, 'login/formulario.html', {'pk': pk, 'id_grupo': id_grupo, 'item': item,
+                                                     'form': form, 'id_usuario': id_usuario,
+                                                     'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})

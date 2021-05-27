@@ -9,9 +9,10 @@ class GruposForm(ModelForm):
 class TarefasForm(ModelForm):
     class Meta:
         model = Tarefa
-        fields = '__all__'
+        fields = ['title', 'description', 'complete']
+
 
 class Sub_GruposForm(ModelForm):
     class Meta:
         model = Sub_Grupos
-        fields = '__all__'
+        fields = ['nome_subgrupo']
