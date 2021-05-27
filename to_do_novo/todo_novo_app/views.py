@@ -1,5 +1,5 @@
 from .models import Tarefa, Grupos, Sub_Grupos
-from .forms import Sub_GruposForm, TarefasForm
+from .forms import Sub_GruposForm, TarefasForm, GruposForm
 from django.shortcuts import render, redirect, get_object_or_404
 from django.views.generic.list import ListView
 from django.views.generic import View
@@ -100,19 +100,14 @@ class MostraSubGrupo(LoginRequiredMixin, View):
 def pega_get(request, pk):
 
     form = Sub_GruposForm(request.POST or None)
-    print(pk)
     item = Grupos.objects.get(id=pk)
-    print(item)
     id_grupo = item.id
-    print(id_grupo)
-
 
     if form.is_valid():
         form.save()
         return redirect(f'/subgrupos/{id_grupo}')
 
     return render(request, 'login/formulario_subgrupos.html', {'form': form, 'pk': pk, 'id_grupo': id_grupo})
-
 
 
 def exclui_subgrupo(request, pk):
@@ -129,12 +124,14 @@ def exclui_subgrupo(request, pk):
 def pega_get_tarefa(request, pk):
 
     form = TarefasForm(request.POST or None)
+    item = Sub_Grupos.objects.get(id=pk)
+    id_subgrupo = item.id
 
     if form.is_valid():
         form.save()
-        return redirect(f'/mostra_subgrupo/{pk}')
+        return redirect(f'/mostra_subgrupo/{id_subgrupo}')
 
-    return render(request, 'login/formulario.html', {'form': form, 'pk': pk})
+    return render(request, 'login/formulario.html', {'form': form, 'pk': pk, 'id_subgrupo': id_subgrupo})
 
 
 def edita_subgrupo(request, pk):
@@ -219,3 +216,38 @@ class Apagar(DeleteView, LoginRequiredMixin):
     fields = '__all__'
     success_url = reverse_lazy('tarefas')
     template_name = 'login/confirmar.html'
+
+def exclui_tarefa(request, pk):
+
+    item_tarefa = Tarefa.objects.get(id=pk)
+    print(item_tarefa)
+    id_subgrupo = item_tarefa.subgrupo_tar_id.id
+    print(id_subgrupo)
+    id_usuario = item_tarefa.user_id
+
+    if request.method == 'POST':
+        item_tarefa.delete()
+        return redirect(f'/mostra_subgrupo/{id_subgrupo}')
+
+    return render(request, 'login/confirmar.html', {'pk': pk, 'id_usuario': id_usuario, 'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})
+
+def edita_tarefa(request, pk):
+
+    item_tarefa = Tarefa.objects.get(id=pk)
+    id_subgrupo = item_tarefa.subgrupo_tar_id.id
+    id_usuario = item_tarefa.user_id
+    id_grupo = item_tarefa.grupo.id
+    print(id_grupo)
+
+    if request.method == 'POST':
+        item = get_object_or_404(Sub_Grupos, id=pk)
+
+        form = TarefasForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return redirect(f'/mostra_subgrupo/{id_subgrupo}')
+    else:
+        item = Tarefa.objects.filter(id=pk).values().last()
+        form = TarefasForm(initial=item)
+
+    return render(request, 'login/formulario.html', {'pk': pk, 'id_grupo': id_grupo, 'item': item, 'form': form, 'id_usuario': id_usuario, 'item_tarefa': item_tarefa, 'id_subgrupo': id_subgrupo})
