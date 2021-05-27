@@ -44,11 +44,16 @@ class Sair(LogoutView):
 
 
 #Bloco Tratamento Grupos
-class VisualizaGrupo(LoginRequiredMixin, ListView, View):
+class VisualizaGrupo(LoginRequiredMixin, View):
 
     def get(self, request):
+        busca = request.GET.get('search-area', '')
         grupos = Grupos.objects.all()
-        context = {'grupos': grupos}
+
+        if busca:
+            grupos = grupos.filter(nome_grupo__icontains=busca)
+
+        context = {'grupos': grupos, 'search_input': busca}
 
         return render(request, "login/grupos.html", context)
 
