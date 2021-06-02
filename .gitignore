@@ -9,3 +9,6 @@ migrations
 
 # banco
 db.sqlite3
+
+#variaveis de ambiente
+variaveis_de_ambiente.py
