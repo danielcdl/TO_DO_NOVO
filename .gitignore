@@ -1,0 +1,11 @@
+# pastas do pycharm
+.ideia
+
+# cache do python
+__pycache__
+
+# migrations
+migrations
+
+# banco
+db.sqlite3

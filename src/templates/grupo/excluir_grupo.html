@@ -1,0 +1,12 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<a href="{% url 'grupos' %} ">Retornar</a>
+
+<form method='POST'>
+  {% csrf_token %}
+  <p>Tem certeza de que deseja apagar {{ grupo }} ?</p>
+  <input type="submit" value="ApagaGrupo">
+</form>
+
+{% endblock content %}
